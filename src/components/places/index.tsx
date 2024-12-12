@@ -27,13 +27,16 @@ export function Places({data}: Props) {
         snapPoints={[snapPoints.min, snapPoints.max]}
         handleIndicatorStyle={styles.indicator}
         backgroundStyle={styles.container}
-        enableOverDrag={false}
+        enableOverDrag={false}        
         >
             <BottomSheetFlatList         
             data={data}
             keyExtractor={item => item.id}
             renderItem={({item}) => (
-                <Place data={item} onPress={() => router.navigate(`/market/${item.id}`)}/>
+                <Place data={item} onPress={() => {                    
+                    router.navigate(`/market/${item.id}`)
+                    bottonSheetRef.current?.collapse();
+                }}/>
             )}
             contentContainerStyle={styles.content}
             ListHeaderComponent={() => (

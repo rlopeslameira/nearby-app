@@ -27,10 +27,18 @@ export function Details({data}: Props) {
             <Text style={styles.description}>{data.description}</Text>
             <View style={styles.group}>
                 <Text style={styles.title}>Informações</Text>
-            </View>            
-            <Info description={`${data.coupons} cupons disponíveis`} icon={IconTicket} />
-            <Info description={data.address} icon={IconMapPin} />
-            <Info description={data.phone} icon={IconPhone} />
+                <Info description={`${data.coupons} cupons disponíveis`} icon={IconTicket} />
+                <Info description={data.address} icon={IconMapPin} />
+                <Info description={data.phone} icon={IconPhone} />
+            </View>     
+            <View style={styles.group}>
+                <Text style={styles.title}>Regulamento</Text>
+                {data.rules.map(rule => (
+                    <Text key={rule.id}>
+                        {`\u2022 ${rule.description}`}
+                    </Text>
+                ))}
+            </View>       
         </View>
   )
 }

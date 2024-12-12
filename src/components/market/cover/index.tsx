@@ -17,7 +17,7 @@ export function Cover({uri}: CoverProps) {
             <Button style={{
                 width: 50,
                 height: 40,                
-            }} onPress={() => router.back()}>
+            }} onPress={() => router.navigate('/home')}>
                 <Button.Icon icon={IconArrowLeft} />
             </Button>
         </View>

@@ -1,5 +1,5 @@
 import { View, Alert, Text, SafeAreaView, Image } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Categories, CategoryProps } from '@/components/categories'
 import MapView, {Callout, Marker} from 'react-native-maps'
 
@@ -14,7 +14,7 @@ import imgPin from '@/assets/pin.png'
 
 import * as Location from 'expo-location'
 import Loading from '@/components/loading'
-import { router } from 'expo-router'
+import { router, useFocusEffect } from 'expo-router'
 import { IconPhoneCall } from '@tabler/icons-react-native'
 
 type MarketProps = PlaceProps & {
@@ -34,6 +34,18 @@ export default function Home() {
     const [marteks, setMarkets] = useState<MarketProps[]>([]);
     const [currentLocation, setCurrentLocation] = useState<LocationProps>();
 
+    
+    useFocusEffect(
+        useCallback(() => {
+            const controller = new AbortController();
+            const signal = controller.signal;
+            fetchMarkets();          
+            return () => {
+                controller.abort();
+            }
+        }, [])
+      );
+
     async function getLocation() {
         const {status} = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
@@ -47,8 +59,9 @@ export default function Home() {
         });
     }
 
-    async function fetchCategories() {
+    async function fetchCategories() {        
         try{
+            console.log('fetching categories');
             const {data} = await api.get('/categories');
             setCategories(data);
             setCategory(data[0].id);        
@@ -60,6 +73,7 @@ export default function Home() {
 
     async function fetchMarkets() {
         try{
+            console.log('fetching markets');
             if (!category) return;
             const {data} = await api.get(`/markets/category/${category}`);
             setMarkets(data);
@@ -75,11 +89,11 @@ export default function Home() {
     }, [])
 
     useEffect(() => {
-        fetchMarkets()        ;
+        fetchMarkets();
     }, [category])
 
     return (
-        <SafeAreaView style={{flex: 1, backgroundColor: colors.green.soft}} >
+        <View style={{flex: 1, backgroundColor: colors.green.soft}} >
             {currentLocation?.latitude ? (
             <>
                 <Categories data={categories} selected={category} onSelect={setCategory}/>
@@ -154,6 +168,6 @@ export default function Home() {
         ) : (
             <Loading />
         )}
-        </SafeAreaView>
+        </View>
     )
 }
