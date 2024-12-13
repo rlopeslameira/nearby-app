@@ -33,7 +33,7 @@ export default function Home() {
     const [category, setCategory] = useState<string>('');    
     const [marteks, setMarkets] = useState<MarketProps[]>([]);
     const [currentLocation, setCurrentLocation] = useState<LocationProps>();
-
+    const [loading, setLoading] = useState(false);
     
     useFocusEffect(
         useCallback(() => {
@@ -61,8 +61,8 @@ export default function Home() {
 
     async function fetchCategories() {        
         try{
-            console.log('fetching categories');
             const {data} = await api.get('/categories');
+            data.unshift({id: 'todos', name: 'Todos'});
             setCategories(data);
             setCategory(data[0].id);        
         }catch(error){
@@ -73,13 +73,18 @@ export default function Home() {
 
     async function fetchMarkets() {
         try{
-            console.log('fetching markets');
-            if (!category) return;
-            const {data} = await api.get(`/markets/category/${category}`);
+            setLoading(true);
+            
+            if (!category || !currentLocation) return;
+            const url = `/markets/category/${category}/${currentLocation?.latitude}/${currentLocation?.longitude}`;
+            console.log('fetching markets ', url);
+            const {data} = await api.get(url);
             setMarkets(data);
         }catch(error){
             console.log(error);
             Alert.alert('Erro', 'Não foi possível carregar os mercados')
+        }finally{
+            setLoading(false);
         }
     }
 
@@ -92,78 +97,86 @@ export default function Home() {
         fetchMarkets();
     }, [category])
 
+
+
     return (
         <View style={{flex: 1, backgroundColor: colors.green.soft}} >
             {currentLocation?.latitude ? (
             <>
                 <Categories data={categories} selected={category} onSelect={setCategory}/>
-                <MapView 
-                style={{flex: 1}} 
-                initialRegion={{
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421
-                }} 
-            >
-                <Marker 
-                identifier="current" 
-                coordinate={{
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude
-                }} 
-                image={imgLocation}
-                title="Você está aqui" />
-
-                {marteks.map((market, index) => (
-                    <Marker 
-                        key={index} 
-                        identifier={market.id}
-                        coordinate={{
-                            latitude: market.latitude,
-                            longitude: market.longitude
+                {loading ? (
+                    <Loading />
+                ) : (
+                    <>                      
+                        <MapView 
+                        style={{flex: 1}} 
+                        initialRegion={{
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude,
+                            latitudeDelta: 0.0922,
+                            longitudeDelta: 0.0421
                         }} 
-                        image={imgPin}
-                    >
-                        <Callout onPress={()=> router.navigate(`/market/${market.id}`)}>
-                            <View style={{flexDirection: 'row'}}>
-                                <Image source={{uri: market.cover}} style={{
-                                    width: 52,
-                                    height: 52,
-                                    backgroundColor: colors.gray[200],
-                                    marginRight: 12,
-                                }}/>
+                        >
+                        <Marker 
+                        identifier="current" 
+                        coordinate={{
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude
+                        }} 
+                        image={imgLocation}
+                        title="Você está aqui" />
 
-                                <View >
+                        {marteks.map((market, index) => (
+                            <Marker 
+                                key={index} 
+                                identifier={market.id}
+                                coordinate={{
+                                    latitude: market.latitude,
+                                    longitude: market.longitude
+                                }} 
+                                image={imgPin}
+                            >
+                                <Callout onPress={()=> router.navigate(`/market/${market.id}`)}>
+                                    <View style={{flexDirection: 'row'}}>
+                                        <Image source={{uri: market.cover}} style={{
+                                            width: 52,
+                                            height: 52,
+                                            backgroundColor: colors.gray[200],
+                                            marginRight: 12,
+                                        }}/>
 
-                                    <Text style={{
-                                        fontSize: 14,
-                                        color: colors.gray[600],
-                                        fontFamily: fontFamily.medium,
-                                    }}>{market.name}</Text>
-                                    <Text style={{
-                                        fontSize: 12,
-                                        color: colors.gray[600],
-                                        fontFamily: fontFamily.regular,
-                                    }}>{market.address}</Text>
-                                    {(market.phone && market.phone.length > 0) && (
-                                        <View style={{flexDirection:'row', paddingTop: 2}}>
-                                            <IconPhoneCall size={16} color={colors.green.base} />
+                                        <View >
+
+                                            <Text style={{
+                                                fontSize: 14,
+                                                color: colors.gray[600],
+                                                fontFamily: fontFamily.medium,
+                                            }}>{market.name}</Text>
                                             <Text style={{
                                                 fontSize: 12,
                                                 color: colors.gray[600],
                                                 fontFamily: fontFamily.regular,
-                                                marginLeft: 6
-                                            }}>{market.phone}</Text>
+                                            }}>{market.address}</Text>
+                                            {(market.phone && market.phone.length > 0) && (
+                                                <View style={{flexDirection:'row', paddingTop: 2}}>
+                                                    <IconPhoneCall size={16} color={colors.green.base} />
+                                                    <Text style={{
+                                                        fontSize: 12,
+                                                        color: colors.gray[600],
+                                                        fontFamily: fontFamily.regular,
+                                                        marginLeft: 6
+                                                    }}>{market.phone}</Text>
+                                                </View>
+                                            )}
                                         </View>
-                                    )}
-                                </View>
-                            </View>
-                        </Callout>
-                    </Marker>
-                ))}
-                </MapView>
-                <Places data={marteks} />
+                                    </View>
+                                </Callout>
+                            </Marker>
+                        ))}
+                        </MapView>
+                        <Places data={marteks} />
+                    </>
+                )}
             </>
         ) : (
             <Loading />
